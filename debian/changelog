@@ -1,4 +1,4 @@
-landscape-client (25.08.1-0landscape0) jammy; urgency=medium
+landscape-client (25.08.2-0landscape0) jammy; urgency=medium
 
   * build: added setuptools to build-depends
   * fix: setup.py clean command
