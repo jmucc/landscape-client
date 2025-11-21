@@ -130,7 +130,7 @@ class AptFacade:
         database.
     """
 
-    max_dpkg_retries = 12  # number of dpkg retries before we give up
+    max_dpkg_retries = 13  # number of dpkg retries before we give up
     dpkg_retry_sleep = 5
     _dpkg_status = "/var/lib/dpkg/status"
 
