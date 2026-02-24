@@ -25,7 +25,7 @@ from landscape.lib.fs import (
     touch_file,
 )
 
-from .skeleton import build_skeleton_apt
+from .skeleton import build_skeleton_apt, create_package_hash
 
 
 class TransactionError(Exception):
@@ -280,6 +280,47 @@ class AptFacade:
             return
         self._set_dpkg_selections(version.package.name + " install")
 
+    def reload_channels_no_skeleton(self, force_reload_binaries=False):
+        """Reload the channels and update the cache without building skeletons.
+
+        This is used for testing the performance of reloading channels without
+        the overhead of building skeletons.
+        """
+        self._cache.open(None)
+        internal_sources_list = self._get_internal_sources_list()
+        if self.refetch_package_index or (
+            force_reload_binaries and os.path.exists(internal_sources_list)
+        ):
+            # Try to update only the internal repos, if the python-apt
+            # version is new enough to accept a sources_list parameter.
+            new_apt_args = {}
+            if force_reload_binaries and not self.refetch_package_index:
+                new_apt_args["sources_list"] = internal_sources_list
+            try:
+                try:
+                    self._cache.update(**new_apt_args)
+                except TypeError:
+                    self._cache.update()
+            except apt.cache.FetchFailedException:
+                channels = self.get_channels()
+                msg = f"Apt failed to reload channels ({channels!r})"
+                raise ChannelError(msg)
+            self._cache.open(None)
+
+        self._pkg2hash.clear()
+        self._hash2pkg.clear()
+        for package in self._cache:
+            if not self._is_main_architecture(package):
+                continue
+            for version in package.versions:
+                skeleton_hash = self.create_package_hash(version)
+                # Use a tuple including the package, since the Version
+                # objects of two different packages can have the same
+                # hash.
+                self._pkg2hash[(package, version)] = skeleton_hash
+                self._hash2pkg[skeleton_hash] = version
+        self._channels_loaded = True
+
     def reload_channels(self, force_reload_binaries=False):
         """Reload the channels and update the cache.
 
@@ -514,6 +555,10 @@ class AptFacade:
         @return: a L{PackageSkeleton} object.
         """
         return build_skeleton_apt(pkg, with_info=with_info, with_unicode=True)
+
+    def create_package_hash(self, version):
+        """Create a hash for the given package version."""
+        return create_package_hash(version)
 
     def get_package_hash(self, version):
         """Return a hash from the given package.

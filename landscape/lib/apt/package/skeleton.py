@@ -193,3 +193,74 @@ def build_skeleton_apt(version, with_info=False, with_unicode=False):
         if version.installed_size > 0:
             skeleton.installed_size = version.installed_size
     return skeleton
+
+
+def build_skeleton_apt_direct(version, with_info=False, with_unicode=False):
+    """Build a package skeleton from an apt package.
+
+    @param version: An instance of C{apt.package.Version}
+    @param with_info: Whether to extract extra information about the
+        package, like description, summary, size.
+    @param with_unicode: Whether the C{name} and C{version} of the
+        skeleton should be unicode strings.
+    """
+    name, version_string = version.package.name, version.version
+    if with_unicode:
+        name, version_string = str(name), str(version_string)
+    skeleton = PackageSkeleton(DEB_PACKAGE, name, version_string)
+    relations = set()
+
+    for type, dep_ver_list in version._cand.depends_list.items():
+        if type == "PreDepends" or type == "Depends":
+            relation_type = DEB_REQUIRES
+            or_relation_type = DEB_OR_REQUIRES
+        elif type == "Conflicts" or type == "Breaks":
+            relation_type = DEB_CONFLICTS
+            or_relation_type = None
+        else:
+            continue
+
+        for dependency in dep_ver_list:
+            depend = []
+            for basedependency in dependency:
+                depend.append(
+                    (
+                        basedependency.target_pkg.name,
+                        basedependency.target_ver,
+                        basedependency.comp_type,
+                    ),
+                )
+            value_strings = [relation_to_string(relation) for relation in depend]
+            value_relation_type = relation_type
+            if len(value_strings) > 1:
+                value_relation_type = or_relation_type
+            relation_string = " | ".join(value_strings)
+            relations.add((value_relation_type, relation_string))
+
+    for dependency in version.provides:
+        depend = [(dependency, "", "")]
+        value_strings = [relation_to_string(relation) for relation in depend]
+        relation_string = " | ".join(value_strings)
+        relations.add((DEB_PROVIDES, relation_string))
+
+    relations.add(
+        (
+            DEB_NAME_PROVIDES,
+            f"{version.package.name} = {version.version}",
+        ),
+    )
+
+    relations.add(
+        (DEB_UPGRADES, f"{version.package.name} < {version.version}"),
+    )
+
+    skeleton.relations = sorted(relations)
+
+    if with_info:
+        skeleton.section = version.section
+        skeleton.summary = version.summary
+        skeleton.description = version.description
+        skeleton.size = version.size
+        if version.installed_size > 0:
+            skeleton.installed_size = version.installed_size
+    return skeleton
