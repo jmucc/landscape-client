@@ -105,7 +105,7 @@ jobs:
           scanner: ${{ matrix.scanner }}
           artifact-type: ${{ matrix.artifact-type }}
           deb-path: ${{ steps.deb-path.outputs.path }}
-          base: ${{ github.event_name == 'schedule' && 'resolute' || inputs.base }}
+          base: ${{ github.event_name == 'schedule' && 'noble' || inputs.base }}
           base-arch: ${{ github.event_name == 'schedule' && 'amd64' || inputs.base-arch }}
           base-pockets: ${{ inputs.base-pockets }}
           revision: ${{ inputs.revision }}
