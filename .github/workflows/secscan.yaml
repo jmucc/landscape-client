@@ -20,7 +20,7 @@ on:
         description: 'Git ref to build the deb from (defaults to the default branch).'
         required: false
       base:
-        description: 'Base Ubuntu release to scan against, e.g. resolute.'
+        description: 'Base Ubuntu release to scan against, e.g. noble.'
         required: false
       base-arch:
         description: 'Base architecture to scan against, e.g. amd64.'
