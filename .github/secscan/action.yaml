@@ -77,9 +77,9 @@ runs:
 
         ssdlc_args=()
         ssdlc_args+=(--ssdlc-product-name landscape-client)
-        [ -n "${CYCLE}" ] && ssdlc_args+=(--ssdlc-product-cycle "${CYCLE}")
         [ -n "${RELEASE_CHANNEL}" ] && ssdlc_args+=(--ssdlc-product-channel "${RELEASE_CHANNEL}")
         [ -n "${PRODUCT_VERSION}" ] && ssdlc_args+=(--ssdlc-product-version "${PRODUCT_VERSION}")
+        [ -n "${CYCLE}" ] && ssdlc_args+=(--ssdlc-cycle "${CYCLE}")
 
         RESULTS_PATH="$(realpath "${RESULTS_FILE}")"
         if [ "${ARTIFACT_TYPE}" = "snap" ]; then
