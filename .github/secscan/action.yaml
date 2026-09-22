@@ -129,6 +129,7 @@ runs:
 
         echo "results-location=${RESULTS_PATH}" >> "$GITHUB_OUTPUT"
       env:
+        NO_PROXY: .internal
         SCANNER: ${{ inputs.scanner }}
         ARTIFACT_TYPE: ${{ inputs.artifact-type }}
         DEB_PATH: ${{ inputs.deb-path }}

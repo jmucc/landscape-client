@@ -76,7 +76,7 @@ jobs:
   secscan:
     needs: [prepare, build]
     if: always() && needs.prepare.result == 'success' && needs.build.result != 'failure' && needs.build.result != 'cancelled'
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
